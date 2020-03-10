@@ -24,57 +24,59 @@
 
 namespace BadgeFactor2;
 
-class Email {
+class Email
+{
+    public static function init_hooks()
+    {
+        add_action('init', array( Email::class, 'init' ), 9966);
+        add_action('cmb2_admin_init', array( Email::class, 'cmb2_admin_init' ));
+    }
 
-	public static function init_hooks() {
-		add_action( 'init', array( Email::class, 'init' ), 9966 );
-		add_action( 'cmb2_admin_init', array( Email::class, 'cmb2_admin_init' ) );
-	}
+    public static function init()
+    {
+        $labels = array(
+            'name'               => __('Verified Emails', 'badgefactor2'),
+            'singular_name'      => __('Verified Email', 'badgefactor2'),
+            'add_new_item'       => __('Add New Email', 'badgefactor2'),
+            'edit_item'          => __('Edit Email', 'badgefactor2'),
+            'search_items'       => __('Search Emails', 'badgefactor2'),
+            'not_found'          => __('No emails found.', 'badgefactor2'),
+            'not_found_in_trash' => __('No emails found in Trash.', 'badgefactor2'),
+        );
 
-	public static function init() {
-		$labels = array(
-			'name'               => __( 'Verified Emails', 'badgefactor2' ),
-			'singular_name'      => __( 'Verified Email', 'badgefactor2' ),
-			'add_new_item'       => __( 'Add New Email', 'badgefactor2' ),
-			'edit_item'          => __( 'Edit Email', 'badgefactor2' ),
-			'search_items'       => __( 'Search Emails', 'badgefactor2' ),
-			'not_found'          => __( 'No emails found.', 'badgefactor2' ),
-			'not_found_in_trash' => __( 'No emails found in Trash.', 'badgefactor2' ),
-		);
+        register_post_type(
+            'email',
+            array(
+                'labels'       => $labels,
+                'public'       => true,
+                'show_in_menu' => 'badgefactor2',
+            )
+        );
+    }
 
-		register_post_type(
-			'email',
-			array(
-				'labels'       => $labels,
-				'public'       => true,
-				'show_in_menu' => 'badgefactor2',
-			)
-		);
-	}
+    public static function cmb2_admin_init()
+    {
+        $cmb = new_cmb2_box(
+            array(
+                'id'           => 'email_fields',
+                'title'        => __('Email Fields', 'badgefactor2'),
+                'object_types' => array( 'email' ),
+                'context'      => 'normal',
+                'priority'     => 'high',
+                'show_names'   => true, // Show field names on the left
+            // 'cmb_styles' => false, // false to disable the CMB stylesheet
+            // 'closed'     => true, // Keep the metabox closed by default
+            )
+        );
 
-	public static function cmb2_admin_init() {
-		$cmb = new_cmb2_box(
-			array(
-				'id'           => 'email_fields',
-				'title'        => __( 'Email Fields', 'badgefactor2' ),
-				'object_types' => array( 'email' ),
-				'context'      => 'normal',
-				'priority'     => 'high',
-				'show_names'   => true, // Show field names on the left
-			// 'cmb_styles' => false, // false to disable the CMB stylesheet
-			// 'closed'     => true, // Keep the metabox closed by default
-			)
-		);
+        $cmb->add_field(
+            array(
+                'name' => 'email',
+                'desc' => '',
+                'id'   => '_email',
+                'type' => 'text_emails',
 
-		$cmb->add_field(
-			array(
-				'name' => 'email',
-				'desc' => '',
-				'id'   => '_email',
-				'type' => 'text_emails',
-
-			)
-		);
-	}
-
+            )
+        );
+    }
 }

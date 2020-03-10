@@ -24,58 +24,59 @@
 
 namespace BadgeFactor2;
 
-class Issuer {
+class Issuer
+{
+    public static function init_hooks()
+    {
+        add_action('init', array( Issuer::class, 'init' ), 9966);
+        add_action('cmb2_admin_init', array( Issuer::class, 'cmb2_admin_init' ));
+    }
 
+    public static function init()
+    {
+        $labels = array(
+            'name'               => __('Issuers', 'badgefactor2'),
+            'singular_name'      => __('Issuer', 'badgefactor2'),
+            'add_new_item'       => __('Add New Issuer', 'badgefactor2'),
+            'edit_item'          => __('Edit Issuer', 'badgefactor2'),
+            'search_items'       => __('Search Issuers', 'badgefactor2'),
+            'not_found'          => __('No issuers found.', 'badgefactor2'),
+            'not_found_in_trash' => __('No issuers found in Trash.', 'badgefactor2'),
+        );
 
-	public static function init_hooks() {
+        register_post_type(
+            'issuer',
+            array(
+                'labels'       => $labels,
+                'public'       => true,
+                'show_in_menu' => 'badgefactor2',
+            )
+        );
+    }
 
-		add_action( 'init', array( Issuer::class, 'init' ), 9966 );
-		add_action( 'cmb2_admin_init', array( Issuer::class, 'cmb2_admin_init' ) );
-	}
+    public static function cmb2_admin_init()
+    {
+        $cmb = new_cmb2_box(
+            array(
+                'id'           => 'issuer_fields',
+                'title'        => __('Issuer Fields', 'badgefactor2'),
+                'object_types' => array( 'issuer' ),
+                'context'      => 'normal',
+                'priority'     => 'high',
+                'show_names'   => true, // Show field names on the left
+            // 'cmb_styles' => false, // false to disable the CMB stylesheet
+            // 'closed'     => true, // Keep the metabox closed by default
+            )
+        );
 
-	public static function init() {
-		$labels = array(
-			'name'               => __( 'Issuers', 'badgefactor2' ),
-			'singular_name'      => __( 'Issuer', 'badgefactor2' ),
-			'add_new_item'       => __( 'Add New Issuer', 'badgefactor2' ),
-			'edit_item'          => __( 'Edit Issuer', 'badgefactor2' ),
-			'search_items'       => __( 'Search Issuers', 'badgefactor2' ),
-			'not_found'          => __( 'No issuers found.', 'badgefactor2' ),
-			'not_found_in_trash' => __( 'No issuers found in Trash.', 'badgefactor2' ),
-		);
+        $cmb->add_field(
+            array(
+                'name' => 'email',
+                'desc' => '',
+                'id'   => '_email',
+                'type' => 'text_emails',
 
-		register_post_type(
-			'issuer',
-			array(
-				'labels'       => $labels,
-				'public'       => true,
-				'show_in_menu' => 'badgefactor2',
-			)
-		);
-	}
-
-	public static function cmb2_admin_init() {
-		$cmb = new_cmb2_box(
-			array(
-				'id'           => 'issuer_fields',
-				'title'        => __( 'Issuer Fields', 'badgefactor2' ),
-				'object_types' => array( 'issuer' ),
-				'context'      => 'normal',
-				'priority'     => 'high',
-				'show_names'   => true, // Show field names on the left
-			// 'cmb_styles' => false, // false to disable the CMB stylesheet
-			// 'closed'     => true, // Keep the metabox closed by default
-			)
-		);
-
-		$cmb->add_field(
-			array(
-				'name' => 'email',
-				'desc' => '',
-				'id'   => '_email',
-				'type' => 'text_emails',
-
-			)
-		);
-	}
+            )
+        );
+    }
 }

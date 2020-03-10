@@ -34,5 +34,4 @@ WP_CLI::add_command('bf2', BadgeFactor2_CLI::class);
  */
 class BadgeFactor2_CLI extends WP_CLI_Command
 {
-
 }

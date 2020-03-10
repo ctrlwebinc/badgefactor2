@@ -14,13 +14,12 @@ class CMB2_Hook_Finder
 
     private static function get_files($pattern, $flags = 0, $path = '')
     {
-
         if (!$path && ($dir = dirname($pattern)) != '.') {
-
-            if ($dir == '\\' || $dir == '/') {$dir = '';} // End IF Statement
+            if ($dir == '\\' || $dir == '/') {
+                $dir = '';
+            } // End IF Statement
 
             return self::get_files(basename($pattern), $flags, $dir . '/');
-
         } // End IF Statement
         $paths = glob($path . '*', GLOB_ONLYDIR | GLOB_NOSORT);
         $files = glob($path . $pattern, $flags);
@@ -33,7 +32,6 @@ class CMB2_Hook_Finder
                     if (!in_array($file, self::$found_files)) {
                         $found_files[] = $file;
                     }
-
                 }
 
                 self::$found_files = array_merge(self::$found_files, $found_files);
@@ -41,7 +39,6 @@ class CMB2_Hook_Finder
                 if (is_array($files) && is_array($found_files)) {
                     $files = array_merge($files, $found_files);
                 }
-
             } // End FOREACH Loop
         }
         return $files;
@@ -272,7 +269,6 @@ class CMB2_Hook_Finder
                 if (array_key_exists($m_key, $to_match) && $m_value == $to_match[$m_key]) {
                     $matched++;
                 }
-
             }
 
             if (('AND' == $operator && $matched == $count)
