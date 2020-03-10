@@ -18,36 +18,33 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/**
- * @package Badge_Factor_2
- */
-
 namespace BadgeFactor2;
 
-class Assertion {
+class Assertion
+{
+    public static function init_hooks()
+    {
+        add_action('init', [self::class, 'init'], 9966);
+    }
 
-
-	public static function init_hooks() {
-		add_action( 'init', array( Assertion::class, 'init' ), 9966 );
-	}
-
-	public static function init() {
-		$labels = array(
-			'name'               => __( 'Assertions', 'badgefactor2' ),
-			'singular_name'      => __( 'Assertion', 'badgefactor2' ),
-			'add_new_item'       => __( 'Add New Assertion', 'badgefactor2' ),
-			'edit_item'          => __( 'Edit Assertion', 'badgefactor2' ),
-			'search_items'       => __( 'Search Assertions', 'badgefactor2' ),
-			'not_found'          => __( 'No assertions found.', 'badgefactor2' ),
-			'not_found_in_trash' => __( 'No assertions found in Trash.', 'badgefactor2' ),
-		);
-		register_post_type(
-			'assertion',
-			array(
-				'labels'       => $labels,
-				'public'       => true,
-				'show_in_menu' => 'badgefactor2',
-			)
-		);
-	}
+    public static function init()
+    {
+        $labels = [
+            'name'               => __('Assertions', 'badgefactor2'),
+            'singular_name'      => __('Assertion', 'badgefactor2'),
+            'add_new_item'       => __('Add New Assertion', 'badgefactor2'),
+            'edit_item'          => __('Edit Assertion', 'badgefactor2'),
+            'search_items'       => __('Search Assertions', 'badgefactor2'),
+            'not_found'          => __('No assertions found.', 'badgefactor2'),
+            'not_found_in_trash' => __('No assertions found in Trash.', 'badgefactor2'),
+        ];
+        register_post_type(
+            'assertion',
+            [
+                'labels'       => $labels,
+                'public'       => true,
+                'show_in_menu' => 'badgefactor2',
+            ]
+        );
+    }
 }

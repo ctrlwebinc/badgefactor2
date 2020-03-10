@@ -18,10 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/**
- * @package Badge_Factor_2
- */
-
 namespace BadgeFactor2;
 
 use WP_CLI;
@@ -34,5 +30,4 @@ WP_CLI::add_command('bf2', BadgeFactor2_CLI::class);
  */
 class BadgeFactor2_CLI extends WP_CLI_Command
 {
-
 }

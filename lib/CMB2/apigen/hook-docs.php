@@ -1,39 +1,37 @@
 <?php
 /**
  * Generate documentation for hooks in CMB2
- * Credit: https://github.com/woothemes/woocommerce/blob/master/apigen/hook-docs.php
+ * Credit: https://github.com/woothemes/woocommerce/blob/master/apigen/hook-docs.php.
  */
 class CMB2_Hook_Finder
 {
     private static $current_file = '';
-    private static $files_to_scan = array();
+    private static $files_to_scan = [];
     private static $pattern_custom_actions = '/do_action(.*?);/i';
     private static $pattern_custom_filters = '/apply_filters(.*?);/i';
-    private static $found_files = array();
+    private static $found_files = [];
     private static $custom_hooks_found = '';
 
     private static function get_files($pattern, $flags = 0, $path = '')
     {
-
         if (!$path && ($dir = dirname($pattern)) != '.') {
+            if ($dir == '\\' || $dir == '/') {
+                $dir = '';
+            } // End IF Statement
 
-            if ($dir == '\\' || $dir == '/') {$dir = '';} // End IF Statement
-
-            return self::get_files(basename($pattern), $flags, $dir . '/');
-
+            return self::get_files(basename($pattern), $flags, $dir.'/');
         } // End IF Statement
-        $paths = glob($path . '*', GLOB_ONLYDIR | GLOB_NOSORT);
-        $files = glob($path . $pattern, $flags);
+        $paths = glob($path.'*', GLOB_ONLYDIR | GLOB_NOSORT);
+        $files = glob($path.$pattern, $flags);
 
         if (is_array($paths)) {
             foreach ($paths as $p) {
-                $found_files = array();
-                $retrieved_files = (array) self::get_files($pattern, $flags, $p . '/');
+                $found_files = [];
+                $retrieved_files = (array) self::get_files($pattern, $flags, $p.'/');
                 foreach ($retrieved_files as $file) {
                     if (!in_array($file, self::$found_files)) {
                         $found_files[] = $file;
                     }
-
                 }
 
                 self::$found_files = array_merge(self::$found_files, $found_files);
@@ -41,42 +39,42 @@ class CMB2_Hook_Finder
                 if (is_array($files) && is_array($found_files)) {
                     $files = array_merge($files, $found_files);
                 }
-
             } // End FOREACH Loop
         }
+
         return $files;
     }
 
-    private static function get_hook_link($hook, $details = array())
+    private static function get_hook_link($hook, $details = [])
     {
         if (!empty($details['class'])) {
-            $link = 'https://cmb2.io/api//source-class-' . $details['class'] . '.html#' . $details['line'];
+            $link = 'https://cmb2.io/api//source-class-'.$details['class'].'.html#'.$details['line'];
         } elseif (!empty($details['function'])) {
-            $link = 'https://cmb2.io/api//source-function-' . $details['function'] . '.html#' . $details['line'];
+            $link = 'https://cmb2.io/api//source-function-'.$details['function'].'.html#'.$details['line'];
         } else {
-            $link = 'https://github.com/CMB2/CMB2/search?utf8=%E2%9C%93&q=' . $hook;
+            $link = 'https://github.com/CMB2/CMB2/search?utf8=%E2%9C%93&q='.$hook;
         }
 
         if (false !== strpos($hook, '{') || false !== strpos($hook, '$')) {
-            $hook = '"' . $hook . '"';
+            $hook = '"'.$hook.'"';
         } else {
             $hook = "'$hook'";
         }
 
-        return '<a href="' . $link . '">' . $hook . '</a>';
+        return '<a href="'.$link.'">'.$hook.'</a>';
     }
 
     public static function process_hooks()
     {
         // If we have one, get the PHP files from it.
-        $class_files = self::get_files('*.php', GLOB_MARK, dirname(__FILE__) . '/../includes/');
-        $class_files[] = dirname(__FILE__) . '/../init.php';
+        $class_files = self::get_files('*.php', GLOB_MARK, dirname(__FILE__).'/../includes/');
+        $class_files[] = dirname(__FILE__).'/../init.php';
 
-        self::$files_to_scan = array(
+        self::$files_to_scan = [
             'Hooks' => $class_files,
-        );
+        ];
 
-        $scanned = array();
+        $scanned = [];
 
         ob_start();
 
@@ -84,7 +82,7 @@ class CMB2_Hook_Finder
         echo '<h1>WordPress Action and Filter Hook Reference</h1>';
 
         foreach (self::$files_to_scan as $heading => $files) {
-            self::$custom_hooks_found = array();
+            self::$custom_hooks_found = [];
 
             foreach ($files as $f) {
                 self::$current_file = basename($f);
@@ -130,14 +128,14 @@ class CMB2_Hook_Finder
                                             $loop++;
                                             $next_hook = trim(trim(is_string($tokens[$index + $loop]) ? $tokens[$index + $loop] : $tokens[$index + $loop][1], '"'), "'");
 
-                                            if (in_array($next_hook, array('.', '{', '}', '"', "'", ' '))) {
+                                            if (in_array($next_hook, ['.', '{', '}', '"', "'", ' '])) {
                                                 continue;
                                             }
 
                                             $hook_first = substr($next_hook, 0, 1);
                                             $hook_last = substr($next_hook, -1, 1);
 
-                                            if (in_array($next_hook, array(',', ';'), true)) {
+                                            if (in_array($next_hook, [',', ';'], true)) {
                                                 if ($open) {
                                                     $hook .= '}';
                                                     $open = false;
@@ -148,7 +146,7 @@ class CMB2_Hook_Finder
                                             if ('_' === $hook_first) {
                                                 // Because CMB2 uses an _id() method
                                                 if ('_id' !== $next_hook) {
-                                                    $next_hook = '}' . $next_hook;
+                                                    $next_hook = '}'.$next_hook;
                                                     $open = false;
                                                 }
                                             }
@@ -166,13 +164,13 @@ class CMB2_Hook_Finder
                                     if (isset(self::$custom_hooks_found[$hook])) {
                                         self::$custom_hooks_found[$hook]['file'][] = self::$current_file;
                                     } else {
-                                        self::$custom_hooks_found[$hook] = array(
-                                            'line' => $token[2],
-                                            'class' => $current_class,
+                                        self::$custom_hooks_found[$hook] = [
+                                            'line'     => $token[2],
+                                            'class'    => $current_class,
                                             'function' => $current_function,
-                                            'file' => array(self::$current_file),
-                                            'type' => $token_type,
-                                        );
+                                            'file'     => [self::$current_file],
+                                            'type'     => $token_type,
+                                        ];
                                     }
                                     break;
                             }
@@ -192,8 +190,8 @@ class CMB2_Hook_Finder
             ksort(self::$custom_hooks_found);
 
             if (!empty(self::$custom_hooks_found)) {
-                $actions = self::wp_list_filter(self::$custom_hooks_found, array('type' => 'action'));
-                $filters = self::wp_list_filter(self::$custom_hooks_found, array('type' => 'filter'));
+                $actions = self::wp_list_filter(self::$custom_hooks_found, ['type' => 'action']);
+                $filters = self::wp_list_filter(self::$custom_hooks_found, ['type' => 'filter']);
 
                 echo '<div class="panel panel-default"><div class="panel-heading"><h2>Action Hooks</h2></div>';
 
@@ -201,9 +199,9 @@ class CMB2_Hook_Finder
 
                 foreach ($actions as $hook => $details) {
                     echo '<tr>
-						<td>' . self::get_hook_link($hook, $details) . '</td>
-						<td>' . implode(', ', array_unique($details['file'])) . '</td>
-					</tr>' . "\n";
+						<td>'.self::get_hook_link($hook, $details).'</td>
+						<td>'.implode(', ', array_unique($details['file'])).'</td>
+					</tr>'."\n";
                 }
 
                 echo '</tbody></table></div>';
@@ -213,9 +211,9 @@ class CMB2_Hook_Finder
 
                 foreach ($filters as $hook => $details) {
                     echo '<tr>
-						<td>' . self::get_hook_link($hook, $details) . '</td>
-						<td>' . implode(', ', array_unique($details['file'])) . '</td>
-					</tr>' . "\n";
+						<td>'.self::get_hook_link($hook, $details).'</td>
+						<td>'.implode(', ', array_unique($details['file'])).'</td>
+					</tr>'."\n";
                 }
 
                 echo '</tbody></table></div>';
@@ -232,7 +230,7 @@ class CMB2_Hook_Finder
         $header = str_replace('Tree | ', 'Hook Reference | ', $header);
         $footer = explode('<div id="footer">', $html);
 
-        file_put_contents('/Users/JT/Sites/wpengine/api/hook-docs.html', $header . ob_get_clean() . end($footer));
+        file_put_contents('/Users/JT/Sites/wpengine/api/hook-docs.html', $header.ob_get_clean().end($footer));
         echo "Hook docs generated :)\n";
     }
 
@@ -248,12 +246,13 @@ class CMB2_Hook_Finder
      *                         all elements from the array must match. 'OR' means only
      *                         one element needs to match. 'NOT' means no elements may
      *                         match. Default 'AND'.
+     *
      * @return array Array of found values.
      */
-    protected static function wp_list_filter($list, $args = array(), $operator = 'AND')
+    protected static function wp_list_filter($list, $args = [], $operator = 'AND')
     {
         if (!is_array($list)) {
-            return array();
+            return [];
         }
 
         if (empty($args)) {
@@ -262,7 +261,7 @@ class CMB2_Hook_Finder
 
         $operator = strtoupper($operator);
         $count = count($args);
-        $filtered = array();
+        $filtered = [];
 
         foreach ($list as $key => $obj) {
             $to_match = (array) $obj;
@@ -272,7 +271,6 @@ class CMB2_Hook_Finder
                 if (array_key_exists($m_key, $to_match) && $m_value == $to_match[$m_key]) {
                     $matched++;
                 }
-
             }
 
             if (('AND' == $operator && $matched == $count)

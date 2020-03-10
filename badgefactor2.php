@@ -9,7 +9,7 @@
  * Author URI: https://badgefactor2.com/
  * License: GNU AGPL
  * Text Domain: badgefactor2
- * Domain Path: /languages
+ * Domain Path: /languages.
  */
 
 /*
@@ -33,26 +33,28 @@
 
 namespace BadgeFactor2;
 
-defined( 'ABSPATH' ) || exit;
+defined('ABSPATH') || exit;
 
 // Define BF2_FILE.
-if ( ! defined( 'BF2_FILE' ) ) {
-	define( 'BF2_FILE', __FILE__ );
+if (!defined('BF2_FILE')) {
+    define('BF2_FILE', __FILE__);
 }
 
 // Include the main WooCommerce class.
-if ( ! class_exists( 'BadgeFactor2' ) ) {
-	require_once dirname( __FILE__ ) . '/src/class.badgefactor2.php';
+if (!class_exists('BadgeFactor2')) {
+    require_once dirname(__FILE__).'/src/class.badgefactor2.php';
 }
 
 /**
  * Returns the main instance of BadgeFactor2.
  *
  * @since  2.0.0-alpha
+ *
  * @return BadgeFactor2
  */
-function BadgeFactor2() {
-	return BadgeFactor2::instance();
+function BadgeFactor2()
+{
+    return BadgeFactor2::instance();
 }
 
 // Global for backwards compatibility.
