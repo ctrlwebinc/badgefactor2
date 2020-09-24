@@ -895,9 +895,11 @@ class BadgrClient {
 
 		} catch ( ConnectException $e ) { // TODO catch and treat 403s as an expired token. try to refresh and retry before failing.
 			// TODO: potentially change client state.
+			die('connect');
 			return null;
 		} catch ( GuzzleException $e ) {
 			// TODO: potentially change client state.
+			die(var_export($args,true) . $e->getMessage());
 			return null;
 		}
 	}
