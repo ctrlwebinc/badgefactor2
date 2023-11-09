@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## A venir
+- Correction : edit badge
 
 ## 1.14.0
 - Ajout: image dans la page de parcours
