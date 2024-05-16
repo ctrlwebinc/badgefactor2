@@ -1544,13 +1544,15 @@ class BadgeFactor2_Admin {
 		}
 	}
 
-	public static function add_admin_header_section()
+    public static function add_admin_header_section()
     {
-		if ('assertions' === $_GET['page']) {
-			echo '<div class="csv-assertions-process-output"></div>';
-		}
+        if ( isset( $_GET['page']) && !empty( $_GET['page']) ) {
+            if ('assertions' === $_GET['page'] ) {
+                echo '<div class="csv-assertions-process-output"></div>';
+            }
+        }
+        echo '';
     }
-
 
 	/**
 	 * Hook called on form_slug field save.
