@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## A venir
 
+## 1.14.2
+- Ajout partage linkedIn
 
 ## 1.14.1
 - Correction : edit badge
