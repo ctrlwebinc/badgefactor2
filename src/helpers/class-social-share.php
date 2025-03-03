@@ -257,4 +257,20 @@ class SocialShare {
         // Print the link
         return $link;
     }
+
+    public static function linkedIn(string $badgeName, int $issueYear, int $issueMonth, string $assertionUrl, string $assertionId, string $organizationName = null)
+    {
+        $query = http_build_query([
+            'startTask'        => 'CERTIFICATION_NAME',
+            'name'             => $badgeName,
+            'issueYear'        => $issueYear,
+            'issueMonth'       => $issueMonth,
+            'certUrl'          => $assertionUrl,
+            'certId'           => $assertionId,
+            'organizationName' => $organizationName ?? '',
+        ]);
+        $sessionRedirect = urlencode(sprintf('https://www.linkedin.com/profile/add?%s', $query));
+
+        return sprintf('https://www.linkedin.com/uas/login?session_redirect=%s', $sessionRedirect);
+    }
 }

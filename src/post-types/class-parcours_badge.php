@@ -27,7 +27,7 @@
 
 namespace BadgeFactor2\Post_Types;
 
-use BadgeFactor2\Controllers\BadgePage_Controller;
+use BadgeFactor2\Controllers\Parcours_Controller;
 use BadgeFactor2\Models\BadgeClass;
 use BadgeFactor2\Models\Issuer;
 use BadgeFactor2\Roles\Approver;
@@ -36,21 +36,21 @@ use BadgeFactor2\Helpers\Template;
 /**
  * Badge Page post type.
  */
-class BadgePage {
+class ParcoursBadge {
 
 	/**
 	 * Custom post type's slug.
 	 *
 	 * @var string
 	 */
-	private static $slug = 'badge-page';
+	private static $slug = 'parcours-badge';
 
 	/**
 	 * Custom post type's slug, pluralized.
 	 *
 	 * @var string
 	 */
-	private static $slug_plural = 'badge-pages';
+	private static $slug_plural = 'parcours-badges';
 
 	private static $courses = false;
 
@@ -65,11 +65,12 @@ class BadgePage {
 		add_action( 'admin_init', array( self::class, 'add_capabilities' ), 10 );
 		add_filter( 'post_updated_messages', array( self::class, 'updated_messages' ), 10 );
 		add_action( 'cmb2_admin_init', array( self::class, 'register_cpt_metaboxes' ), 10 );
-		add_action( 'save_post_' . self::$slug, array( self::class, 'save_badge_page' ), 10, 3 );
-		add_filter( 'single_template', array( BadgePage_Controller::class, 'single' ) );
-		add_filter( 'archive_template', array( BadgePage_Controller::class, 'archive' ) );
-		add_action( 'update_badge_page', array( self::class, 'update_badge_page' ) );
-		add_action( 'create_badge_page', array( self::class, 'create_badge_page' ) );
+		add_action( 'save_post_' . self::$slug, array( self::class, 'save_parcours_badge_page' ), 10, 3 );
+		add_filter( 'single_template', array( Parcours_Controller::class, 'single' ) );
+		add_filter( 'the_content', array( self::class, 'the_content' ) );
+		add_filter( 'archive_template', array( Parcours_Controller::class, 'archive' ) );
+		add_action( 'update_parcours_badge_page', array( self::class, 'update_parcours_badge_page' ) );
+		add_action( 'create_parcours_badge_page', array( self::class, 'create_parcours_badge_page' ) );
 	}
 
 
@@ -77,36 +78,36 @@ class BadgePage {
 	 * Registers the `badge_page` post type.
 	 */
 	public static function init() {
-
+		
 		register_post_type(
 			self::$slug,
 			array(
 				'labels'            => array(
-					'name'                  => __( 'Badge Pages', BF2_DATA['TextDomain'] ),
-					'singular_name'         => __( 'Badge Page', BF2_DATA['TextDomain'] ),
-					'all_items'             => __( 'All Badge Pages', BF2_DATA['TextDomain'] ),
-					'archives'              => __( 'Badge Page Archives', BF2_DATA['TextDomain'] ),
-					'attributes'            => __( 'Badge Page Attributes', BF2_DATA['TextDomain'] ),
-					'insert_into_item'      => __( 'Insert into Badge Page', BF2_DATA['TextDomain'] ),
-					'uploaded_to_this_item' => __( 'Uploaded to this Badge Page', BF2_DATA['TextDomain'] ),
+					'name'                  => __( 'Parcours Badge Pages', BF2_DATA['TextDomain'] ),
+					'singular_name'         => __( 'Parcours Badge Page', BF2_DATA['TextDomain'] ),
+					'all_items'             => __( 'All Parcours Badge Pages', BF2_DATA['TextDomain'] ),
+					'archives'              => __( 'Parcours Badge Page Archives', BF2_DATA['TextDomain'] ),
+					'attributes'            => __( 'Parcours Badge Page Attributes', BF2_DATA['TextDomain'] ),
+					'insert_into_item'      => __( 'Insert into Parcours Badge Page', BF2_DATA['TextDomain'] ),
+					'uploaded_to_this_item' => __( 'Uploaded to this Parcours Badge Page', BF2_DATA['TextDomain'] ),
 					'featured_image'        => _x( 'Featured Image', self::$slug, BF2_DATA['TextDomain'] ),
 					'set_featured_image'    => _x( 'Set featured image', self::$slug, BF2_DATA['TextDomain'] ),
 					'remove_featured_image' => _x( 'Remove featured image', self::$slug, BF2_DATA['TextDomain'] ),
 					'use_featured_image'    => _x( 'Use as featured image', self::$slug, BF2_DATA['TextDomain'] ),
-					'filter_items_list'     => __( 'Filter Badge Pages list', BF2_DATA['TextDomain'] ),
-					'items_list_navigation' => __( 'Badge Pages list navigation', BF2_DATA['TextDomain'] ),
-					'items_list'            => __( 'Badge Pages list', BF2_DATA['TextDomain'] ),
-					'new_item'              => __( 'New Badge Page', BF2_DATA['TextDomain'] ),
+					'filter_items_list'     => __( 'Filter Parcours Badge Pages list', BF2_DATA['TextDomain'] ),
+					'items_list_navigation' => __( 'Parcours Badge Pages list navigation', BF2_DATA['TextDomain'] ),
+					'items_list'            => __( 'Parcours Badge Pages list', BF2_DATA['TextDomain'] ),
+					'new_item'              => __( 'New Parcours Badge Page', BF2_DATA['TextDomain'] ),
 					'add_new'               => __( 'Add New', BF2_DATA['TextDomain'] ),
-					'add_new_item'          => __( 'Add New Badge Page', BF2_DATA['TextDomain'] ),
-					'edit_item'             => __( 'Edit Badge Page', BF2_DATA['TextDomain'] ),
-					'view_item'             => __( 'View Badge Page', BF2_DATA['TextDomain'] ),
-					'view_items'            => __( 'View Badge Pages', BF2_DATA['TextDomain'] ),
-					'search_items'          => __( 'Search Badge Pages', BF2_DATA['TextDomain'] ),
-					'not_found'             => __( 'No Badge Pages found', BF2_DATA['TextDomain'] ),
-					'not_found_in_trash'    => __( 'No Badge Pages found in trash', BF2_DATA['TextDomain'] ),
-					'parent_item_colon'     => __( 'Parent Badge Page:', BF2_DATA['TextDomain'] ),
-					'menu_name'             => __( 'Badge Pages', BF2_DATA['TextDomain'] ),
+					'add_new_item'          => __( 'Add New Parcours Badge Page', BF2_DATA['TextDomain'] ),
+					'edit_item'             => __( 'Edit Parcours Badge Page', BF2_DATA['TextDomain'] ),
+					'view_item'             => __( 'View Parcours Badge Page', BF2_DATA['TextDomain'] ),
+					'view_items'            => __( 'View Parcours Badge Pages', BF2_DATA['TextDomain'] ),
+					'search_items'          => __( 'Search Parcours Badge Pages', BF2_DATA['TextDomain'] ),
+					'not_found'             => __( 'No Parcours Badge Pages found', BF2_DATA['TextDomain'] ),
+					'not_found_in_trash'    => __( 'No Parcours Badge Pages found in trash', BF2_DATA['TextDomain'] ),
+					'parent_item_colon'     => __( 'Parent Parcours Badge Page:', BF2_DATA['TextDomain'] ),
+					'menu_name'             => __( 'Parcours Badge', BF2_DATA['TextDomain'] ),
 				),
 				'public'            => true,
 				'hierarchical'      => false,
@@ -114,12 +115,12 @@ class BadgePage {
 				'show_in_nav_menus' => true,
 				'supports'          => array( 'title', 'editor' ),
 				'has_archive'       => true,
-				'rewrite'           => array( 'slug' => 'badges' ),
+				'rewrite'           => array( 'slug' => 'parcours' ),
 				'query_var'         => true,
 				'menu_position'     => 50,
 				'menu_icon'         => BF2_BASEURL . 'assets/images/badge.svg',
 				'show_in_rest'      => false,
-				'taxonomies'        => array( 'badge-category' ),
+				'taxonomies'        => array( 'parcours-badge-category' ),
 				'capability_type'   => array( self::$slug, self::$slug_plural ),
 				'capabilities'      => array(
 					'edit_post'           => 'edit_' . self::$slug,
@@ -152,17 +153,17 @@ class BadgePage {
 		$messages[ self::$slug ] = array(
 			0  => '', // Unused. Messages start at index 1.
 			/* translators: %s: post permalink */
-			1  => sprintf( __( 'Badge Page updated. <a target="_blank" href="%s">View Badge Page</a>', BF2_DATA['TextDomain'] ), esc_url( $permalink ) ),
+			1  => sprintf( __( 'Parcours Badge Page updated. <a target="_blank" href="%s">View Badge Page</a>', BF2_DATA['TextDomain'] ), esc_url( $permalink ) ),
 			2  => __( 'Custom field updated.', BF2_DATA['TextDomain'] ),
 			3  => __( 'Custom field deleted.', BF2_DATA['TextDomain'] ),
-			4  => __( 'Badge Page updated.', BF2_DATA['TextDomain'] ),
+			4  => __( 'Parcours Badge Page updated.', BF2_DATA['TextDomain'] ),
 			/* translators: %s: date and time of the revision */
-			5  => isset( $_GET['revision'] ) ? sprintf( __( 'Badge Page restored to revision from %s', BF2_DATA['TextDomain'] ), wp_post_revision_title( (int) $_GET['revision'], false ) ) : false,
+			5  => isset( $_GET['revision'] ) ? sprintf( __( 'Parcours Badge Page restored to revision from %s', BF2_DATA['TextDomain'] ), wp_post_revision_title( (int) $_GET['revision'], false ) ) : false,
 			/* translators: %s: post permalink */
-			6  => sprintf( __( 'Badge Page published. <a href="%s">View Badge Page</a>', BF2_DATA['TextDomain'] ), esc_url( $permalink ) ),
-			7  => __( 'Badge Page saved.', BF2_DATA['TextDomain'] ),
+			6  => sprintf( __( 'Parcours Badge Page published. <a href="%s">View Parcours Badge Page</a>', BF2_DATA['TextDomain'] ), esc_url( $permalink ) ),
+			7  => __( 'Parcours Badge Page saved.', BF2_DATA['TextDomain'] ),
 			/* translators: %s: post permalink */
-			8  => sprintf( __( 'Badge Page submitted. <a target="_blank" href="%s">Preview Badge Page</a>', BF2_DATA['TextDomain'] ), esc_url( add_query_arg( 'preview', 'true', $permalink ) ) ),
+			8  => sprintf( __( 'Parcours Badge Page submitted. <a target="_blank" href="%s">Preview Parcours Badge Page</a>', BF2_DATA['TextDomain'] ), esc_url( add_query_arg( 'preview', 'true', $permalink ) ) ),
 			9  => sprintf(
 				/* translators: 1: Publish box date format, see https://secure.php.net/date 2: Post permalink */
 				__( 'Badge Page scheduled for: <strong>%1$s</strong>. <a target="_blank" href="%2$s">Preview Badge Page</a>', BF2_DATA['TextDomain'] ),
@@ -170,13 +171,24 @@ class BadgePage {
 				esc_url( $permalink )
 			),
 			/* translators: %s: post permalink */
-			10 => sprintf( __( 'Badge Page draft updated. <a target="_blank" href="%s">Preview Badge Page</a>', BF2_DATA['TextDomain'] ), esc_url( add_query_arg( 'preview', 'true', $permalink ) ) ),
+			10 => sprintf( __( 'Parcours Badge Page draft updated. <a target="_blank" href="%s">Preview Badge Page</a>', BF2_DATA['TextDomain'] ), esc_url( add_query_arg( 'preview', 'true', $permalink ) ) ),
 		);
 
 		return $messages;
 	}
 
-
+	public static function the_content($content) {
+		global $post;
+		
+		if ($post->post_type == self::$slug){
+			
+			return $content;
+		}else{
+			return $content;
+		}
+		
+	}
+	
 	/**
 	 * Add roles (capabilities) to custom post type.
 	 *
@@ -257,7 +269,7 @@ class BadgePage {
 
 		$cmb = new_cmb2_box(
 			array(
-				'id'           => 'badgepage_badge_info',
+				'id'           => 'parcours_badge_info',
 				'title'        => __( 'Badge Info', BF2_DATA['TextDomain'] ),
 				'object_types' => array( self::$slug ),
 				'context'      => 'normal',
@@ -275,9 +287,11 @@ class BadgePage {
 				'type'       => 'pw_select',
 				'style'      => 'width: 200px',
 				'options'    => BadgeClass::select_options(),
+				/*
 				'attributes' => array(
 					'required' => 'required',
 				),
+				*/
 			)
 		);
 
@@ -287,9 +301,11 @@ class BadgePage {
 				'name'       => __( 'Badge Criteria', BF2_DATA['TextDomain'] ),
 				'desc'       => __( 'Criteria to obtain this badge.', BF2_DATA['TextDomain'] ),
 				'type'       => 'wysiwyg',
+				/*
 				'attributes' => array(
 					'required' => 'required',
 				),
+				*/
 			)
 		);
 
@@ -323,7 +339,7 @@ class BadgePage {
 
 			$cmb = new_cmb2_box(
 				array(
-					'id'           => 'badgepage_autoevaluation_info',
+					'id'           => 'parcours_autoevaluation_info',
 					'title'        => __( 'Autoevaluation', BF2_DATA['TextDomain'] ),
 					'object_types' => array( self::$slug ),
 					'context'      => 'normal',
@@ -358,7 +374,7 @@ class BadgePage {
 
 		$cmb = new_cmb2_box(
 			array(
-				'id'           => 'badgepage_badge_request_info',
+				'id'           => 'parcours_badge_request_info',
 				'title'        => __( 'Badge Request', BF2_DATA['TextDomain'] ),
 				'object_types' => array( self::$slug ),
 				'context'      => 'normal',
@@ -406,6 +422,82 @@ class BadgePage {
 				),
 			)
 		);
+		
+		
+		// last update date time
+        $cmb = new_cmb2_box(
+			array(
+				'id'           => 'parcours_latest_update',
+				'title'        => 'Autre informations',
+				'object_types' => array( self::$slug ),
+                'context'      => 'normal',
+				'priority'     => 'default',
+				'show_names'   => true,
+				'capability'   => 'manage_badgr',
+			)
+		);
+
+        $cmb->add_field( array(
+            'id'   => 'parcours_latest_update_date',
+            'type' => 'text_date',
+            'date_format' => 'Y-m-d',
+            'name' => 'Date ',
+            'desc' => 'La date de la dernière mise à jour'
+        ));
+		
+		$cmb->add_field( array(
+            'id'   => 'required_time_hours',
+            'type' => 'text_small',
+			'name' => 'Temps requis ',
+            'attributes' => array(
+                    'type' => 'number',
+                    'min' => '0',
+                    'max' => '40',
+                    'step' => '0.01',
+            ),
+        ));
+		
+		$cmb->add_field( array(
+            'id'   => 'exigence_technologiques',
+            'type' => 'textarea_small',
+			'name' => 'Exigences technologiques ',
+        ));
+		
+		$cmb->add_field( array(
+            'id'   => 'public_cible',
+            'type' => 'textarea_small',
+			'name' => 'Public cible ',
+        ));
+		//
+        $cmb = new_cmb2_box(
+            array(
+                'id'           => 'parcours_media',
+                'title'        => 'Visuels supplémentaires',
+                'object_types' => array( self::$slug ),
+                'context'      => 'normal',
+                'priority'     => 'default',
+                'show_names'   => true,
+                'capability'   => 'manage_badgr',
+            )
+        );
+
+        $cmb->add_field( array(
+                'name'         => 'Image',
+                'id'           => 'parcours_supplementary_image',
+                'type'         => 'file',
+                'options'      => array(
+                    'url' => false,
+                ),
+                'text'         => array(
+                    'add_upload_file_text' => 'Ajouter image',
+                ),
+                'query_args'   => array(
+                    'type' => 'image/png',
+                ),
+                'preview_size' => 'medium',
+                'capability'   => 'manage_badgr',
+        ));
+
 	}
 
 
@@ -418,7 +510,7 @@ class BadgePage {
 		$plugin_data = get_plugin_data( __FILE__ );
 
 		register_taxonomy(
-			'badge-category',
+			'parcours-badge-category',
 			array( self::$slug ),
 			array(
 				'hierarchical'      => true,
@@ -438,7 +530,7 @@ class BadgePage {
 				'show_ui'           => true,
 				'show_admin_column' => true,
 				'query_var'         => true,
-				'rewrite'           => array( 'slug' => 'badge-category' ),
+				'rewrite'           => array( 'slug' => 'parcours-badge-category' ),
 			)
 		);
 	}
@@ -571,7 +663,7 @@ class BadgePage {
 	public static function create_from_badges() {
 		global $wpdb;
 
-		// Get badges with a badgr_badge_class_slug meta where no badge-page with same meta exists.
+		// Get badges with a badgr_badge_class_slug meta where no parcours-badge with same meta exists.
 		$badges = $wpdb->get_results(
 			"SELECT b.*, bcs.meta_value AS badge_class_slug, c.meta_value AS criteria, t.slug AS badge_category, t.name AS badge_category_name, et.meta_value AS earning_type, f.meta_value AS gf_id FROM wp_posts as b
 			JOIN wp_postmeta as bcs
@@ -596,7 +688,7 @@ class BadgePage {
 			SELECT bp.ID FROM wp_posts AS bp
 			JOIN wp_postmeta AS bpbcs
 			ON bp.ID = bpbcs.post_id
-			WHERE bp.post_type = 'badge-page' AND bpbcs.meta_key = 'badge' AND bcs.meta_value = bpbcs.meta_value);",
+			WHERE bp.post_type = 'parcours-badge' AND bpbcs.meta_key = 'badge' AND bcs.meta_value = bpbcs.meta_value);",
 			OBJECT_K
 		);
 
@@ -604,14 +696,14 @@ class BadgePage {
 
 		foreach ( $badges as $badge_post_id => $badge_post ) {
 
-			// Create a post of post type badge-page.
+			// Create a post of post type parcours-badge.
 			$created_post_id = wp_insert_post(
 				array(
 					'post_author'  => 1,
 					'post_content' => $badge_post->post_content, // Reuse post_title.
 					'post_title'   => $badge_post->post_title, // Reuse post_content.
 					'post_status'  => 'publish',
-					'post_type'    => 'badge-page',
+					'post_type'    => 'parcours-badge',
 					'meta_input'   => array(
 						'badge'                        => $badge_post->badge_class_slug,
 						'badge_page_request_form_type' => 'basic',
@@ -900,11 +992,11 @@ class BadgePage {
 	 * @param bool    $update Whether or not this is an update.
 	 * @return void
 	 */
-	public static function save_badge_page( $post_id, $post, $update ) {
+	public static function save_parcours_badge_page( $post_id, $post, $update ) {
 		if ( $update ) {
-			do_action( 'update_badge_page', $post );
+			do_action( 'update_parcours_badge_page', $post );
 		} else {
-			do_action( 'create_badge_page', $post );
+			do_action( 'create_parcours_badge_page', $post );
 		}
 	}
 
@@ -914,7 +1006,7 @@ class BadgePage {
 	 * @param WP_Post $post Badge Page.
 	 * @return void
 	 */
-	public static function update_badge_page( $post ) {
+	public static function update_parcours_badge_page( $post ) {
 	}
 
 	/**
@@ -923,7 +1015,7 @@ class BadgePage {
 	 * @param WP_Post $post Badge Page.
 	 * @return void
 	 */
-	public static function create_badge_page( $post ) {
+	public static function create_parcours_badge_page( $post ) {
 
 	}
 

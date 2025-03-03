@@ -132,6 +132,30 @@ jQuery(document).ready(function ($) {
             }
             return false;
         })
+        .on("click", "button#cancel-reject-badge", function (e) {
+            e.preventDefault();
+            var button = $(this);
+            var action_buttons = $(this)
+                .closest(".button-group")
+                .find("button");
+            var form = $(this).closest("form");
+            if (confirm(button.data("confirm"))) {
+                action_buttons.attr("disabled", true);
+                var post_id = form.find("input#post_ID").val();
+
+                $.post(
+                    ajaxurl,
+                    {
+                        action: "cancel_reject_badge_request",
+                        badge_request_id: post_id,
+                    },
+                    function (response) {
+                        location.reload();
+                    }
+                );
+            }
+            return false;
+        })
         .on("click", "button#start-badge-revision", function (e) {
             e.preventDefault();
             $(".cmb-type-badge-request-rejection-reason").fadeOut(function () {
@@ -164,6 +188,40 @@ jQuery(document).ready(function ($) {
                 );
             }
             return false;
+        })
+        .on("click", "button#cancel-revise-badge", function (e) {
+            e.preventDefault();
+            var button = $(this);
+            var action_buttons = $(this)
+                .closest(".button-group")
+                .find("button");
+            var form = $(this).closest("form");
+            if (confirm(button.data("confirm"))) {
+                action_buttons.attr("disabled", true);
+                var post_id = form.find("input#post_ID").val();
+
+                $.post(
+                    ajaxurl,
+                    {
+                        action: "cancel_revise_badge_request",
+                        badge_request_id: post_id,
+                    },
+                    function (response) {
+                        location.reload();
+                    }
+                );
+            }
+            return false;
+        })
+        .on("change", '#csv-file', function(e) {
+            if (e.target.files[0]) {
+                $('#csv-file-upload-form .csv-file-upload').addClass('valid');
+                $('#send-csv-file').prop('disabled', false);
+            } else {
+                $('#csv-file-upload-form .csv-file-upload').removeClass('valid');
+                $('#send-csv-file').prop('disabled', true);
+            }
+
         });
     $(document).on(
         "change",
@@ -178,7 +236,24 @@ jQuery(document).ready(function ($) {
             }
             window.location.href = url;
         }
-    );
+    )
+    .on("submit", '#csv-file-upload-form', function(e) {
+        e.preventDefault();
+        $('#send-csv-file').prop('disabled', true);
+        $(document.body).css({'cursor' : 'wait'});
+        $.ajax({
+            url: ajaxurl,
+            type:"POST",
+            processData: false,
+            contentType: false,
+            data:  new FormData(this),
+            success: function (response) {
+                $('.csv-assertions-process-output').html(response.output);
+                $('#send-csv-file').prop('disabled', false);
+                $(document.body).css({'cursor' : 'default'});
+            }
+        });
+    });
     $("#menu-posts-badge-page img").each(function () {
         var $img = $(this);
         var imgID = $img.attr("id");

@@ -366,6 +366,7 @@ class BadgrUser {
 	 * @return bool
 	 */
 	public static function update_user( $user_id ) {
+		$result = null;
 		$badgr_user_state = get_user_meta( $user_id, self::$meta_key_for_user_state, true );
 		if ( null !== $badgr_user_state && 'created' === $badgr_user_state ) {
 			$user   = get_userdata( $user_id );
@@ -398,6 +399,20 @@ class BadgrUser {
 			if ( true === $is_verified ) {
 				$user->add_cap( 'badgefactor2_use_badgr' );
 				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public function check_if_user_has_verified_email() {
+		$profile = BadgrProvider::get_profile_associated_to_badgr_user( $this );
+
+		if ( false !== $profile && !empty($profile->emails)) {
+			foreach ( $profile->emails as $email ) {
+				if ( true == $email->verified ) {
+					return true;
+				}
 			}
 		}
 

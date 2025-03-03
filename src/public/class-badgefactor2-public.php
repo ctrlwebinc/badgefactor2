@@ -47,6 +47,8 @@ class BadgeFactor2_Public {
 		add_filter( 'query_vars', array( self::class, 'add_custom_query_vars' ) );
 		add_action( 'wp_enqueue_scripts', array( self::class, 'load_resources' ) );
 
+		add_filter( 'bf2_has_free_access', array( self::class, 'no_free_access' ), 1 );
+
 		if ( ! BuddyPress::is_active() ) {
 			add_filter( 'template_include', array( self::class, 'member_template' ) );
 		}
@@ -54,6 +56,7 @@ class BadgeFactor2_Public {
 		add_filter( 'template_include', array( Issuer_Controller::class, 'archive' ), 20 );
 		add_filter( 'template_include', array( Issuer_Controller::class, 'single' ), 20 );
 		add_filter( 'document_title_parts', array( Assertion_Controller::class, 'title' ), 20 );
+		add_filter( 'unlogged_user_badge_request_form_message', array( self::class, 'badge_request_message_for_unlogged_user' ), 20, 2 );
 	}
 
 
@@ -159,5 +162,76 @@ class BadgeFactor2_Public {
 	public static function load_resources() {
 		wp_enqueue_style( 'badgefactor2-css', BF2_BASEURL . 'assets/css/public.css', array(), BF2_DATA['Version'], 'all' );
 		wp_enqueue_script( 'badgefactor2-js', BF2_BASEURL . 'assets/js/public.js', array( 'jquery' ), BF2_DATA['Version'], true );
+		if ( defined('BF2_PATHWAYS_SUPPLEMENTAL_CSS_URL') ) {
+			wp_enqueue_style( 'badgefactor2-pathways-css', BF2_PATHWAYS_SUPPLEMENTAL_CSS_URL, array(), null,);
+		}
+		if ( defined('BF2_PATHWAYS_SUPPLEMENTAL_JS_URL') && defined ('LBU_URL')) {
+			wp_enqueue_script( 'badgefactor2-pathways-js', BF2_PATHWAYS_SUPPLEMENTAL_JS_URL, array(), null, true );
+			$script_parameters['lbu_url'] = LBU_URL;
+			$current_user = wp_get_current_user();
+			if ( 0 !== $current_user->ID ) {
+				$script_parameters['has_current_user'] = true;
+				$script_parameters['user_id'] = $current_user->ID;
+				$script_parameters['user_email'] = $current_user->user_email;
+				$script_parameters['username'] = $current_user->user_nicename;
+			} else {
+				$script_parameters['has_current_user'] = false;
+			}
+			wp_localize_script( 'badgefactor2-pathways-js', 'badgefactor2_pathways_js_data', $script_parameters);
+		}
+	}
+
+	/**
+	 * Shows message for unlogged in users on badge request form
+	 * 
+	 * @return string $permalink
+	 */
+	public static function badge_request_message_for_unlogged_user ( $login_permalink = '', $registration_permalink = '' ) {
+		$options = get_option( 'badgefactor2' );
+
+		$login_slug = ! empty( $options['bf2_login_page_slug'] ) ? $options['bf2_login_page_slug'] : '';
+		$login_permalink = ( $login_permalink != '' ) ? $login_permalink : $login_slug;
+		$login_permalink = site_url( $login_permalink ) . '/';
+
+		$registration_slug = ! empty( $options['bf2_registration_page_slug'] ) ? $options['bf2_registration_page_slug'] : '';
+		$registration_permalink = ( $registration_permalink != '' ) ? $registration_permalink : $registration_slug;
+		$registration_permalink = site_url( $registration_permalink ) . '/';
+
+		// Handles permalink with WPML
+		if ( class_exists( 'SitePress' ) ) {
+			$my_current_lang = apply_filters( 'wpml_current_language', NULL );
+			$login_permalink = apply_filters( 'wpml_permalink', $login_permalink, $my_current_lang, true ); 
+			
+			$registration_page = get_page_by_path( $registration_slug );
+			if ( !is_null( $registration_page ) ) {
+				$translated_registration_page_id = apply_filters( 'wpml_object_id', $registration_page->ID, 'page', FALSE, $my_current_lang );
+				$registration_permalink = get_permalink( $translated_registration_page_id );
+			}
+		}
+
+		if ( $registration_slug != '' ) {
+			$message = sprintf( 
+					__( 'Please <a href="%s">register</a> or <a href="%s">login</a> first.', BF2_GRAVITYFORMS_DATA['TextDomain'] ), 
+					$registration_permalink,
+					$login_permalink
+				);
+		} else {
+			$message = sprintf( 
+					__( 'Please <a href="%s">login</a> first.', BF2_GRAVITYFORMS_DATA['TextDomain'] ), 
+					$login_permalink
+				);
+		}
+			
+		return sprintf( '<p><em>%s</em></p>', $message);
+
+	}
+
+	/**
+	 * Base filter which denies free access to everyone.
+	 *
+	 * @return bool
+	 */
+	public static function no_free_access( $has_access = false ) {
+		return $has_access;
 	}
 }

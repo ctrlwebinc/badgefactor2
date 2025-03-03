@@ -29,6 +29,7 @@ use BadgeFactor2\Admin\Lists\Assertions;
 use BadgeFactor2\Admin\Lists\Badges;
 use BadgeFactor2\Admin\Lists\Issuers;
 use BadgeFactor2\BadgrClient;
+use BadgeFactor2\Helpers\DataImport;
 use BadgeFactor2\Models\BadgeClass;
 use BadgeFactor2\Post_Types\BadgePage;
 use CMB2_Field;
@@ -76,14 +77,21 @@ class BadgeFactor2_Admin {
 		add_action( 'wp_ajax_bf2_filter_value', array( self::class, 'ajax_filter_value' ) );
 		add_action( 'wp_ajax_reject_badge_request', array( self::class, 'ajax_reject_badge_request' ) );
 		add_action( 'wp_ajax_revise_badge_request', array( self::class, 'ajax_revise_badge_request' ) );
+		add_action( 'wp_ajax_cancel_revise_badge_request', array( self::class, 'ajax_cancel_revise_badge_request' ) );
+		add_action( 'wp_ajax_cancel_reject_badge_request', array( self::class, 'ajax_cancel_reject_badge_request' ) );
+		add_action( 'wp_ajax_mass_import_assertions', array( self::class, 'ajax_mass_import_assertions' ) );
 
 		// BadgeFactor2 Hooks.
 		add_action( 'approve_badge_request', array( self::class, 'approve_badge_request' ), 10, 3 );
 		add_action( 'badge_request_approval_confirmation_email', array( self::class, 'badge_request_approval_confirmation_email' ), 10 );
 		add_action( 'badge_request_rejection_confirmation_email', array( self::class, 'badge_request_rejection_confirmation_email' ), 10 );
 		add_action( 'badge_request_revision_confirmation_email', array( self::class, 'badge_request_revision_confirmation_email' ), 10 );
+		add_action( 'badge_request_cancel_rejection_confirmation_email', array( self::class, 'badge_request_cancel_rejection_confirmation_email' ), 10 );
+		add_action( 'badge_request_cancel_revision_confirmation_email', array( self::class, 'badge_request_cancel_revision_confirmation_email' ), 10 );
 		add_action( 'reject_badge_request', array( self::class, 'reject_badge_request' ), 10, 4 );
 		add_action( 'revise_badge_request', array( self::class, 'revise_badge_request' ), 10, 4 );
+		add_action( 'cancel_reject_badge_request', array( self::class, 'cancel_reject_badge_request' ), 10, 4 );
+		add_action( 'cancel_revise_badge_request', array( self::class, 'cancel_revise_badge_request' ), 10, 4 );
 
 		// CMB2 Hooks.
 		add_action( 'cmb2_admin_init', array( self::class, 'admin_init' ) );
@@ -98,6 +106,7 @@ class BadgeFactor2_Admin {
 		add_action( 'init', array( self::class, 'hook_flush_rewrite_rules' ), 100 );
 		add_action( 'load-edit.php', array( self::class, 'all_by_default_in_admin' ), 10 );
 		add_filter( 'pw_cmb2_field_select2_asset_path', array( self::class, 'pw_cmb2_field_select2_asset_path' ), 10 );
+		add_action( 'admin_notices', array( self::class, 'add_admin_header_section' ), 10 );
 	}
 
 
@@ -422,6 +431,33 @@ class BadgeFactor2_Admin {
 			)
 		);
 
+		$badgefactor2_settings->add_field(
+			array(
+				'name'    => __( 'Activate self-evaluation form?', BF2_DATA['TextDomain'] ),
+				'id'      => 'bf2_autoevaluation_form',
+				'type'    => 'checkbox',
+				'default' => false,
+			)
+		);
+
+		$badgefactor2_settings->add_field(
+			array(
+				'name'    => __( 'Login page slug', BF2_DATA['TextDomain'] ),
+				'id'      => 'bf2_login_page_slug',
+				'type'    => 'text',
+				'default' => '',
+			)
+		);
+
+		$badgefactor2_settings->add_field(
+			array(
+				'name'    => __( 'Registration page slug', BF2_DATA['TextDomain'] ),
+				'id'      => 'bf2_registration_page_slug',
+				'type'    => 'text',
+				'default' => '',
+			)
+		);
+
 		/**
 		 * Registers Emails settings page.
 		 */
@@ -565,6 +601,44 @@ class BadgeFactor2_Admin {
 			)
 		);
 
+		// Rejection cancellation confirmation - Badge Request.
+		$emails_settings->add_field(
+			array(
+				'name' => __( 'Badge Request - Rejection cancellation confirmation', BF2_DATA['TextDomain'] ),
+				'desc' => __( 'This email will be sent to a user when a the rejection of a badge request is cancelled.', BF2_DATA['TextDomain'] ),
+				'id'   => 'badge_request_cancel_rejection_confirmation_email',
+				'type' => 'title',
+			)
+		);
+
+		$emails_settings->add_field(
+			array(
+				'name'    => __( 'Email from', BF2_DATA['TextDomain'] ),
+				'id'      => 'badge_request_cancel_rejection_confirmation_email_from',
+				'type'    => 'text',
+				'default' => get_option( 'admin_email' ),
+			)
+		);
+
+		$emails_settings->add_field(
+			array(
+				'name'    => __( 'Title', BF2_DATA['TextDomain'] ),
+				'id'      => 'badge_request_cancel_rejection_confirmation_email_subject',
+				'type'    => 'text',
+				'default' => 'Your badge request has been rejected.',
+			)
+		);
+
+		$emails_settings->add_field(
+			array(
+				'name'    => __( 'Body', BF2_DATA['TextDomain'] ),
+				'id'      => 'badge_request_cancel_rejection_confirmation_email_body',
+				'type'    => 'wysiwyg',
+				'default' => 'The rejection of your request for the badge $badge$ has been cancelled.<br/>You don\'t need to resubmit your request.',
+				'desc'    => __( 'Available variables: $badge$', BF2_DATA['TextDomain'] ),
+			)
+		);
+
 		// Revision request confirmation - Badge Request.
 		$emails_settings->add_field(
 			array(
@@ -602,6 +676,43 @@ class BadgeFactor2_Admin {
 			)
 		);
 
+		// Revision request cancellation - Badge Request.
+		$emails_settings->add_field(
+			array(
+				'name' => __( 'Badge Request - Revision cancellation', BF2_DATA['TextDomain'] ),
+				'desc' => __( 'This email will be sent to a user when a badge request revision is cancelled.', BF2_DATA['TextDomain'] ),
+				'id'   => 'badge_request_cancel_revision_confirmation_email',
+				'type' => 'title',
+			)
+		);
+
+		$emails_settings->add_field(
+			array(
+				'name'    => __( 'Email from', BF2_DATA['TextDomain'] ),
+				'id'      => 'badge_request_cancel_revision_confirmation_email_from',
+				'type'    => 'text',
+				'default' => get_option( 'admin_email' ),
+			)
+		);
+
+		$emails_settings->add_field(
+			array(
+				'name'    => __( 'Title', BF2_DATA['TextDomain'] ),
+				'id'      => 'badge_request_cancel_revision_confirmation_email_subject',
+				'type'    => 'text',
+				'default' => 'The request for you to revise your badge request has been cancelled.',
+			)
+		);
+
+		$emails_settings->add_field(
+			array(
+				'name'    => __( 'Body', BF2_DATA['TextDomain'] ),
+				'id'      => 'badge_request_cancel_revision_confirmation_email_body',
+				'type'    => 'wysiwyg',
+				'default' => 'The revision request for your badge request for the badge $badge$ has been cancelled.<br/>You don\'t need to resubmit your request.',
+				'desc'    => __( 'Available variables: $badge$', BF2_DATA['TextDomain'] ),
+			)
+		);
 		/**
 		 * Registers Badgr settings page.
 		 */
@@ -910,6 +1021,34 @@ class BadgeFactor2_Admin {
 		wp_send_json( $response );
 	}
 
+	public static function cancel_reject_badge_request( $approver, $badge_request_id, $cancellation_reason = '', $ajax = false ) {
+		$response = array(
+			'status'  => 'fail',
+			'message' => '',
+		);
+
+		$badge_request = get_post( $badge_request_id );
+
+		if ( ! in_array( 'approver', $approver->roles, true ) && ! in_array( 'administrator', $approver->roles, true ) ) {
+			$response['message'] = __( 'You are not an approver on this website.', BF2_DATA['TextDomain'] );
+		} elseif ( ! $badge_request || 'badge-request' !== $badge_request->post_type ) {
+			$response['message'] = __( 'This request is invalid!', BF2_DATA['TextDomain'] );
+		} else {
+			$badge_entity_id = get_post_meta( $badge_request_id, 'badge', true );
+			$badge_page      = BadgePage::get_by_badgeclass_id( $badge_entity_id );
+			$approvers       = get_post_meta( $badge_page->ID, 'badge_request_approver', true );
+
+			update_post_meta( $badge_request_id, 'status', 'requested' );
+			update_post_meta( $badge_request_id, 'approver', $approver->ID );
+			add_post_meta( $badge_request_id, 'dates', array( 'rejection_cancelled' => gmdate( 'Y-m-d H:i:s' ) ) );
+			do_action( 'badge_request_cancel_rejection_confirmation_email', $badge_request_id );
+			$response = array(
+				'status'  => 'success',
+				'message' => __( 'The badge request rejection has been cancelled.', BF2_DATA['TextDomain'] ),
+			);
+		}
+		wp_send_json( $response );
+	}
 
 	/**
 	 * Revision Badge Request
@@ -945,6 +1084,36 @@ class BadgeFactor2_Admin {
 			$response = array(
 				'status'  => 'success',
 				'message' => __( 'The badge request has been sent back for revision.', BF2_DATA['TextDomain'] ),
+			);
+
+		}
+		wp_send_json( $response );
+	}
+
+	public static function cancel_revise_badge_request( $approver, $badge_request_id, $cancellation_reason = '', $ajax = false ) {
+		$response = array(
+			'status'  => 'fail',
+			'message' => '',
+		);
+
+		$badge_request = get_post( $badge_request_id );
+
+		if ( ! in_array( 'approver', $approver->roles, true ) && ! in_array( 'administrator', $approver->roles, true ) ) {
+			$response['message'] = __( 'You are not an approver on this website.', BF2_DATA['TextDomain'] );
+		} elseif ( ! $badge_request || 'badge-request' !== $badge_request->post_type ) {
+			$response['message'] = __( 'This request is invalid!', BF2_DATA['TextDomain'] );
+		} else {
+			$badge_entity_id = get_post_meta( $badge_request_id, 'badge', true );
+			$badge_page      = BadgePage::get_by_badgeclass_id( $badge_entity_id );
+			$approvers       = get_post_meta( $badge_page->ID, 'badge_request_approver', true );
+
+			update_post_meta( $badge_request_id, 'status', 'requested' );
+			update_post_meta( $badge_request_id, 'approver', $approver->ID );
+			add_post_meta( $badge_request_id, 'dates', array( 'revision_cancelled' => gmdate( 'Y-m-d H:i:s' ) ) );
+			do_action( 'badge_request_cancel_revision_confirmation_email', $badge_request_id );
+			$response = array(
+				'status'  => 'success',
+				'message' => __( 'The revision for this badge request has been cancelled.', BF2_DATA['TextDomain'] ),
 			);
 
 		}
@@ -1070,6 +1239,45 @@ class BadgeFactor2_Admin {
 		return wp_mail( $recipient->user_email, $email_subject, $email_body, array( 'Content-Type: text/html; charset=UTF-8', $from ) );
 	}
 
+	public static function badge_request_cancel_rejection_confirmation_email( $badge_request_id ) {
+		$badge_request = get_post( $badge_request_id );
+		if ( ! $badge_request ) {
+			return false;
+		}
+
+		$badge_entity_id  = get_post_meta( $badge_request_id, 'badge', true );
+		$badge_page       = BadgePage::get_by_badgeclass_id( $badge_entity_id );
+		$badge            = BadgeClass::get( $badge_entity_id );
+		
+		if ( ! $badge_page ) {
+			return false;
+		}
+
+		$recipient_id = get_post_meta( $badge_request_id, 'recipient', true );
+		$recipient    = get_user_by( 'ID', $recipient_id );
+		$email_body       = '';
+
+		$email_subject = cmb2_get_option( 'badgefactor2_emails_settings', 'badge_request_cancel_rejection_confirmation_email_subject', __( 'The rejection of your badge request has been cancelled.', BF2_DATA['TextDomain'] ) );
+		$email_body   .= '<div style="font-family: Sans-serif">';
+		$email_body   .= cmb2_get_option( 'badgefactor2_emails_settings', 'badge_request_cancel_rejection_confirmation_email_body', __( 'The rejection of your request for the badge $badge$ has been cancelled.<br/>You don\'t need to resubmit your request.', BF2_DATA['TextDomain'] ) );
+		$email_body    = str_replace( '$badge$', $badge->name, $email_body );
+		$email_body    = apply_filters( 'the_content', $email_body );
+		$email_body   .= '</div>';
+
+		$sanitized_blog_name = str_replace( '"', "'", get_option( 'blog_name' ) );
+		$from_email          = cmb2_get_option( 'badgefactor2_emails_settings', 'badge_request_rejection_confirmation_email_from', get_option( 'admin_email' ) );
+		$from                = sprintf( "From: \"%s\" <%s>;\n\r", $sanitized_blog_name, $from_email );
+
+		add_filter(
+			'wp_mail_from',
+			function( $original_email_address ) use ( $from_email ) {
+				return $from_email;
+			}
+		);
+
+		return wp_mail( $recipient->user_email, $email_subject, $email_body, array( 'Content-Type: text/html; charset=UTF-8', $from ) );
+	}
+
 
 	/**
 	 * Sends a Badge Request revision request confirmation email.
@@ -1108,7 +1316,46 @@ class BadgeFactor2_Admin {
 		$email_body = str_replace( '$link$', '<a href="' . $email_link . '">' . $email_link . '</a>', $email_body );
 
 		$sanitized_blog_name = str_replace( '"', "'", get_option( 'blog_name' ) );
-		$from_email          = cmb2_get_option( 'badgefactor2_emails_settings', 'badge_request_revision_confirmation_email_from', get_option( 'admin_email' ) );
+		$from_email          = cmb2_get_option( 'badgefactor2_emails_settings', 'badge_request_cancel_revision_confirmation_email_from', get_option( 'admin_email' ) );
+		$from                = sprintf( "From: \"%s\" <%s>;\n\r", $sanitized_blog_name, $from_email );
+
+		add_filter(
+			'wp_mail_from',
+			function( $original_email_address ) use ( $from_email ) {
+				return $from_email;
+			}
+		);
+
+		return wp_mail( $recipient->user_email, $email_subject, $email_body, array( 'Content-Type: text/html; charset=UTF-8', $from ) );
+	}
+
+	public static function badge_request_cancel_revision_confirmation_email( $badge_request_id ) {
+		$badge_request = get_post( $badge_request_id );
+		if ( ! $badge_request ) {
+			return false;
+		}
+
+		$badge_entity_id = get_post_meta( $badge_request_id, 'badge', true );
+		$badge_page      = BadgePage::get_by_badgeclass_id( $badge_entity_id );
+		$badge           = BadgeClass::get( $badge_entity_id );
+		
+		if ( ! $badge_page ) {
+			return false;
+		}
+
+		$recipient_id = get_post_meta( $badge_request_id, 'recipient', true );
+		$recipient    = get_user_by( 'ID', $recipient_id );
+		$email_body      = '';
+		
+		$email_subject = cmb2_get_option( 'badgefactor2_emails_settings', 'badge_request_cancel_revision_confirmation_email_subject', __( 'The request to revise your badge request has been cancelled', BF2_DATA['TextDomain'] ) );
+		$email_body   .= '<div style="font-family: Sans-serif">';
+		$email_body   .= cmb2_get_option( 'badgefactor2_emails_settings', 'badge_request_cancel_revision_confirmation_email_body', __( 'The request to revise your badge request for the badge $badge$ has been cancelled.<br/>You don\'t need to resubmit your request.', BF2_DATA['TextDomain'] ) );
+		$email_body    = str_replace( '$badge$', $badge->name, $email_body );
+		$email_body    = apply_filters( 'the_content', $email_body );
+		$email_body   .= '</div>';
+
+		$sanitized_blog_name = str_replace( '"', "'", get_option( 'blog_name' ) );
+		$from_email          = cmb2_get_option( 'badgefactor2_emails_settings', 'badge_request_cancel_revision_confirmation_email_from', get_option( 'admin_email' ) );
 		$from                = sprintf( "From: \"%s\" <%s>;\n\r", $sanitized_blog_name, $from_email );
 
 		add_filter(
@@ -1224,6 +1471,15 @@ class BadgeFactor2_Admin {
 		}
 	}
 
+	public static function ajax_cancel_reject_badge_request() {
+
+		$current_user = wp_get_current_user();
+		if ( $current_user > 0 ) {
+			$badge_request_id = $_POST['badge_request_id'];
+			do_action( 'cancel_reject_badge_request', $current_user, $badge_request_id, $rejection_reason, true );
+		}
+	}
+
 
 	/**
 	 * Receive Ajax badge request revision request.
@@ -1239,6 +1495,30 @@ class BadgeFactor2_Admin {
 
 			do_action( 'revise_badge_request', $current_user, $badge_request_id, $revision_reason, true );
 		}
+	}
+
+	public static function ajax_cancel_revise_badge_request() {
+
+		$current_user = wp_get_current_user();
+		if ( $current_user > 0 ) {
+			$badge_request_id = $_POST['badge_request_id'];
+			$revision_reason  = $_POST['revision_reason'];
+
+			do_action( 'cancel_revise_badge_request', $current_user, $badge_request_id, $revision_reason, true );
+		}
+	}
+
+	public static function ajax_mass_import_assertions()
+	{
+		check_ajax_referer('ajax_file_nonce', 'assertions-csv');
+
+		if(!(is_array($_POST) && is_array($_FILES) && defined('DOING_AJAX') && DOING_AJAX)){
+			return;
+		}
+
+		$tmp_file = $_FILES['csv-file']['tmp_name'];
+		$output = DataImport::batch_process_assertions( $tmp_file );
+		return wp_send_json( array( 'output' => $output ) );
 	}
 
 
@@ -1264,6 +1544,15 @@ class BadgeFactor2_Admin {
 		}
 	}
 
+    public static function add_admin_header_section()
+    {
+        if ( isset( $_GET['page']) && !empty( $_GET['page']) ) {
+            if ('assertions' === $_GET['page'] ) {
+                echo '<div class="csv-assertions-process-output"></div>';
+            }
+        }
+        echo '';
+    }
 
 	/**
 	 * Hook called on form_slug field save.
