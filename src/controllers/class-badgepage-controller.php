@@ -198,30 +198,6 @@ class BadgePage_Controller extends Page_Controller {
 				}
 			}
 
-			$assertions = BadgrProvider::get_all_assertions_by_badge_class_slug( $fields['badge_entity_id'] );
-			if ( ! $assertions ) {
-				$assertions = array();
-			}
-			$members = array();
- 			foreach ( $assertions as $assertion ) {
-				$user = get_user_by( 'email', $assertion->recipient->plaintextIdentity );
-				if ( $user ) {
-					if ( 
-						!AssertionPrivacy::has_privacy_flag( $fields['badge_entity_id'], $user->ID) // check badge visibility
-						&& FALSE === $assertion->revoked // hide revoked assertion
-					) {
-						$members[ $assertion->recipient->plaintextIdentity ] = $user;
-					}
-				}
-			}
-			usort(
-				$members,
-				function( $a, $b ) {
-					return strnatcasecmp( $a->display_name, $b->display_name );
-				}
-			); 
-			$fields['members'] = $members;
-
 			global $bf2_template;
 			$bf2_template         = new stdClass();
 			$bf2_template->fields = $fields;
