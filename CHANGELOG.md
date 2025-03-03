@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## A venir
 
+## 1.14.3-rc
+- keep separate from master
+- remove fetch of assertions and recipients on badgepages
+
 ## 1.14.2
 - Ajout partage linkedIn
 
