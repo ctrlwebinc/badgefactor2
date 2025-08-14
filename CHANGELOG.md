@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## A venir
 - Correction: correction pour "Function _load_textdomain_just_in_time was called incorrectly"
+- Correction: correction pour avertissements de deprecation de propriétés dynamiques
 
 
 ## 1.14.2
