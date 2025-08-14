@@ -77,9 +77,9 @@ class BadgeFactor2 {
 
 	// Declare placeholder variables that other bf2 plugins might access. 
 	// Unless declared, From php 8.2 on, a deprecation warning for dynamic properties will ensue.
-	public static $certificates;
-	public static $courses;
-	public static $gravityforms;
+	public  $certificates;
+	public  $courses;
+	public  $gravityforms;
 
 	/**
 	 * Main Badge Factor 2 Instance.
