@@ -288,6 +288,6 @@ class BadgeFactor2 {
 		if ( ! function_exists( 'get_plugin_data' ) ) {
 			require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 		}
-		Constant::define( 'BF2_DATA', get_plugin_data( BF2_FILE ) );
+		Constant::define( 'BF2_DATA', get_plugin_data( BF2_FILE , true, false) );
 	}
 }

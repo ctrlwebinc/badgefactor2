@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## A venir
+- Correction: correction pour "Function _load_textdomain_just_in_time was called incorrectly"
+
 
 ## 1.14.2
 - Ajout partage linkedIn
